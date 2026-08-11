@@ -20,9 +20,7 @@ from custom_components.fan_controller.const import (
 pytestmark = pytest.mark.usefixtures("enable_custom_integrations")
 
 
-async def test_user_flow_creates_entry(
-    hass: HomeAssistant, configured_entity_ids: dict[str, str]
-) -> None:
+async def test_user_flow_creates_entry(hass: HomeAssistant, configured_entity_ids: dict[str, str]) -> None:
     """The user flow creates an entry for registered entities."""
     data = {CONF_NAME: "Bathroom", **configured_entity_ids}
 

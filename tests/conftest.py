@@ -26,9 +26,7 @@ def configured_entity_ids(hass: HomeAssistant) -> dict[str, str]:
     fan = registry.async_get_or_create("fan", "test", "bathroom_fan")
     light = registry.async_get_or_create("light", "test", "bathroom_light")
     humidity = registry.async_get_or_create("sensor", "test", "bathroom_humidity")
-    average_humidity = registry.async_get_or_create(
-        "sensor", "test", "bathroom_average_humidity"
-    )
+    average_humidity = registry.async_get_or_create("sensor", "test", "bathroom_average_humidity")
 
     return {
         CONF_FAN_ENTITY: fan.entity_id,

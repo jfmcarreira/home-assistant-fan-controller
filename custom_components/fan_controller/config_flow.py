@@ -1,5 +1,3 @@
-"""Config flow for the Fan Controller integration."""
-
 from __future__ import annotations
 
 from typing import Any
@@ -37,24 +35,16 @@ from .const import (
 
 _CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.TEXT)
-        ),
-        vol.Required(CONF_FAN_ENTITY): EntitySelector(
-            EntitySelectorConfig(domain="fan")
-        ),
-        vol.Required(CONF_LIGHT_ENTITY): EntitySelector(
-            EntitySelectorConfig(domain="light")
-        ),
+        vol.Required(CONF_NAME): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
+        vol.Required(CONF_FAN_ENTITY): EntitySelector(EntitySelectorConfig(domain="fan")),
+        vol.Required(CONF_LIGHT_ENTITY): EntitySelector(EntitySelectorConfig(domain="light")),
         vol.Required(CONF_HUMIDITY_SENSOR): EntitySelector(
             EntitySelectorConfig(domain="sensor", device_class="humidity")
         ),
         vol.Required(CONF_AVG_HUMIDITY_SENSOR): EntitySelector(
             EntitySelectorConfig(domain="sensor", device_class="humidity")
         ),
-        vol.Optional(CONF_DEHUMIDIFIER_SWITCH): EntitySelector(
-            EntitySelectorConfig(domain="switch")
-        ),
+        vol.Optional(CONF_DEHUMIDIFIER_SWITCH): EntitySelector(EntitySelectorConfig(domain="switch")),
     }
 )
 
@@ -78,9 +68,7 @@ _OPTIONS_SCHEMA = vol.Schema(
                 unit_of_measurement="min",
             )
         ),
-        vol.Required(
-            CONF_HUMIDITY_THRESHOLD, default=DEFAULT_HUMIDITY_THRESHOLD
-        ): NumberSelector(
+        vol.Required(CONF_HUMIDITY_THRESHOLD, default=DEFAULT_HUMIDITY_THRESHOLD): NumberSelector(
             NumberSelectorConfig(
                 min=5,
                 max=80,
@@ -98,9 +86,7 @@ class FanConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _async_validate_entities(
-        self, user_input: dict[str, Any]
-    ) -> tuple[dict[str, str], str | None]:
+    async def _async_validate_entities(self, user_input: dict[str, Any]) -> tuple[dict[str, str], str | None]:
         """Validate configured entities and return the stable fan registry ID."""
         errors: dict[str, str] = {}
         entity_registry = er.async_get(self.hass)
@@ -129,9 +115,7 @@ class FanConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return errors, fan_registry_id
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Handle the initial config step."""
         errors: dict[str, str] = {}
 
@@ -146,17 +130,11 @@ class FanConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     await self.async_set_unique_id(fan_registry_id)
                     self._abort_if_unique_id_configured()
-                    return self.async_create_entry(
-                        title=user_input[CONF_NAME], data=user_input
-                    )
+                    return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
-        return self.async_show_form(
-            step_id="user", data_schema=_CONFIG_SCHEMA, errors=errors
-        )
+        return self.async_show_form(step_id="user", data_schema=_CONFIG_SCHEMA, errors=errors)
 
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Reconfigure the fan and source entities for an existing controller."""
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
@@ -168,8 +146,7 @@ class FanConfigFlow(ConfigFlow, domain=DOMAIN):
                 for existing_entry in self._async_current_entries():
                     if existing_entry.entry_id != entry.entry_id and (
                         existing_entry.unique_id == fan_registry_id
-                        or existing_entry.data.get(CONF_FAN_ENTITY)
-                        == user_input[CONF_FAN_ENTITY]
+                        or existing_entry.data.get(CONF_FAN_ENTITY) == user_input[CONF_FAN_ENTITY]
                     ):
                         errors[CONF_FAN_ENTITY] = "already_configured"
                         break
@@ -199,16 +176,12 @@ class FanOptionsFlow(OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         self._config_entry = config_entry
 
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
             step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                _OPTIONS_SCHEMA, self._config_entry.options
-            ),
+            data_schema=self.add_suggested_values_to_schema(_OPTIONS_SCHEMA, self._config_entry.options),
         )

@@ -17,6 +17,6 @@ CONF_HUMIDITY_THRESHOLD: Final = "humidity_threshold"
 
 # Default option values
 DEFAULT_FAN_TIMEOUT: Final = 300  # seconds
-DEFAULT_MAX_TIMEOUT: Final = 20   # minutes
+DEFAULT_MAX_TIMEOUT: Final = 20  # minutes
 DEFAULT_HUMIDITY_THRESHOLD: Final = 15  # percent
 MAX_HUMIDITY_RISE: Final = 10.0  # percentage points

@@ -1,4 +1,3 @@
-"""Switch platform for the Fan Controller integration."""
 from __future__ import annotations
 
 from typing import Any
@@ -26,13 +25,12 @@ async def async_setup_entry(
 
 class FanAutoModeSwitch(SwitchEntity):
     """Switch entity representing the auto mode toggle for a fan."""
+
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.CONFIG
     _attr_should_poll = False
 
-    def __init__(
-        self, coordinator: FanCoordinator, entry: ConfigEntry
-    ) -> None:
+    def __init__(self, coordinator: FanCoordinator, entry: ConfigEntry) -> None:
         self._coordinator = coordinator
         self._attr_unique_id = f"{entry.entry_id}_auto_mode"
         self._attr_translation_key = "auto_mode"
