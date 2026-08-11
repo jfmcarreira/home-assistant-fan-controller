@@ -347,17 +347,16 @@ class FanCoordinator:
 
     @property
     def humidity_reference(self) -> float | None:
-        humidity_light_on = self.humidity_light_on if self.humidity_light_on is not None else 100.0
-        humidity_fan_on = self.humidity_fan_on if self.humidity_fan_on is not None else 100.0
+        humidity_light_on = self.humidity_light_on if self.humidity_light_on is not None else 0.0
         avg = self.average_humidity if self.average_humidity is not None else 100.0
-        return max(avg, min(humidity_fan_on, humidity_light_on))
+        return max(avg,  humidity_light_on)
 
     @property
     def timer_expires_at(self) -> datetime | None:
         return self._timer_expires_at
 
     @property
-    def humidity_start_threshold(self) -> float | None:
+    def humidity_threshold(self) -> float | None:
         """Return the humidity value that triggers automatic fan operation."""
         if self.humidity_reference is None:
             return None
@@ -376,21 +375,14 @@ class FanCoordinator:
         return state is not None and state.state == "on"
 
     def is_high_humidity(self) -> bool:
-        if self._humidity_light_on is None or self._current_humidity is None:
-            return False
-        humidity_start_threshold = self.humidity_start_threshold
         return (
-            humidity_start_threshold is not None
-            and self._current_humidity > humidity_start_threshold
+            self._current_humidity is not None
+            and self.humidity_threshold is not None
+            and self._current_humidity > self.humidity_threshold
         )
 
     def is_humidity_recovered(self) -> bool:
-        """Return whether humidity has returned to the light-on baseline."""
-        return (
-            self._humidity_light_on is not None
-            and self._current_humidity is not None
-            and self._current_humidity <= self._humidity_light_on
-        )
+        return self._current_humidity is not None and self.humidity_reference is not None and self._current_humidity <= self.humidity_reference
 
     def is_auto_on_disabled(self) -> bool:
         return not self._auto_mode
@@ -437,7 +429,6 @@ class FanCoordinator:
         )
 
     def log_humidity_recovered(self) -> None:
-        """Log that humidity has returned to the light-on baseline."""
         self._log_fan_decision("Humidity recovered; post-run timeout started.")
 
     def _log_fan_decision(self, message: str) -> None:
@@ -457,7 +448,7 @@ class FanCoordinator:
                         f"{self._format_humidity(self._humidity_light_on)}. "
                         f"Reference: {self._format_humidity(self.humidity_reference)}. "
                         f"Start threshold: "
-                        f"{self._format_humidity(self.humidity_start_threshold)}."
+                        f"{self._format_humidity(self.humidity_threshold)}."
                     ),
                     "entity_id": self._fan_entity,
                     "domain": "fan",

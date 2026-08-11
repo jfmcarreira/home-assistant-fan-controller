@@ -1,4 +1,5 @@
 """Config flow for the Fan Controller integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -165,13 +166,10 @@ class FanConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors and fan_registry_id is not None:
                 await self.async_set_unique_id(fan_registry_id)
                 for existing_entry in self._async_current_entries():
-                    if (
-                        existing_entry.entry_id != entry.entry_id
-                        and (
-                            existing_entry.unique_id == fan_registry_id
-                            or existing_entry.data.get(CONF_FAN_ENTITY)
-                            == user_input[CONF_FAN_ENTITY]
-                        )
+                    if existing_entry.entry_id != entry.entry_id and (
+                        existing_entry.unique_id == fan_registry_id
+                        or existing_entry.data.get(CONF_FAN_ENTITY)
+                        == user_input[CONF_FAN_ENTITY]
                     ):
                         errors[CONF_FAN_ENTITY] = "already_configured"
                         break
@@ -185,9 +183,7 @@ class FanConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                _CONFIG_SCHEMA, entry.data
-            ),
+            data_schema=self.add_suggested_values_to_schema(_CONFIG_SCHEMA, entry.data),
             errors=errors,
         )
 
