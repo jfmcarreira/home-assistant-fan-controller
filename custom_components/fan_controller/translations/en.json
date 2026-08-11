@@ -1,5 +1,5 @@
 {
-  "title": "Fan Controller",
+  "title": "Bathroom Fan Controller",
   "config": {
     "step": {
       "user": {
@@ -16,8 +16,8 @@
           "name": "A friendly name for this room (for example, Master Bathroom).",
           "fan_entity": "The fan entity to control.",
           "light_entity": "The light entity to monitor.",
-          "humidity_sensor": "The humidity sensor in this room.",
-          "average_humidity_sensor": "Sensor providing average baseline humidity.",
+          "humidity_sensor": "The humidity sensor of the room.",
+          "average_humidity_sensor": "Sensor providing average humidity.",
           "dehumidifier_switch": "Optional switch to turn on while the fan runs for high humidity."
         }
       },
@@ -34,11 +34,11 @@
       }
     },
     "error": {
-      "already_configured": "This fan is already configured.",
+      "already_configured": "This controller is already configured.",
       "entity_not_found": "Entity not found."
     },
     "abort": {
-      "already_configured": "This fan is already configured."
+      "already_configured": "This controller is already configured."
     }
   },
   "options": {

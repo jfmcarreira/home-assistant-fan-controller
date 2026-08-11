@@ -1,0 +1,70 @@
+{
+  "title": "Controlador de Ventoinha de Casa de Banho",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Adicionar controlador",
+        "data": {
+          "name": "Nome",
+          "fan_entity": "Entidade da ventoinha",
+          "light_entity": "Entidade da luz",
+          "humidity_sensor": "Sensor de humidade",
+          "average_humidity_sensor": "Sensor de humidade média",
+          "dehumidifier_switch": "Interruptor do desumidificador"
+        },
+        "data_description": {
+          "name": "Um nome amigável para esta divisão (por exemplo, Casa de Banho Principal).",
+          "fan_entity": "A ventoinha a controlar.",
+          "light_entity": "A luz a monitorizar.",
+          "humidity_sensor": "O sensor de humidade da divisão.",
+          "average_humidity_sensor": "Sensor que fornece o valor da humidade média.",
+          "dehumidifier_switch": "Interruptor opcional a ligar enquanto a ventoinha funciona com humidade elevada."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigurar controlador",
+        "data": {
+          "name": "Nome",
+          "fan_entity": "Entidade da ventoinha",
+          "light_entity": "Entidade da luz",
+          "humidity_sensor": "Sensor de humidade",
+          "average_humidity_sensor": "Sensor de humidade média",
+          "dehumidifier_switch": "Interruptor do desumidificador"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "Este controlador já está configurado.",
+      "entity_not_found": "Entidade não encontrada."
+    },
+    "abort": {
+      "already_configured": "Este controlador já está configurado."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opções da ventoinha",
+        "data": {
+          "fan_timeout": "Tempo de funcionamento após desligar",
+          "max_timeout": "Tempo máximo de funcionamento",
+          "humidity_threshold": "Limite de humidade",
+          "humidity_progress_required_drop": "Redução de humidade necessária"
+        },
+        "data_description": {
+          "fan_timeout": "Durante quanto tempo a ventoinha funciona depois de a luz desligar (segundos).",
+          "max_timeout": "Tempo máximo de funcionamento quando a ventoinha é ligada manualmente (minutos).",
+          "humidity_threshold": "Percentagem de humidade acima da referência que liga a ventoinha (percentagem).",
+          "humidity_progress_required_drop": "Redução mínima da humidade necessária em 10 minutos (pontos percentuais)."
+        }
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "auto_mode": {
+        "name": "Modo automático"
+      }
+    }
+  }
+}
