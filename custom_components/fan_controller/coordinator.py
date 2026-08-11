@@ -87,13 +87,13 @@ class FanStateMachine(StateMachine):
         | off.from_(light_on_fan_off, unless=["is_light_on", "is_fan_on"])
         | off.from_(fan_on_high_humidity, unless=["is_light_on", "is_fan_on"])
         | off.from_(fan_on_timeout, unless=["is_light_on", "is_fan_on"])
-        | off.to.itself()
-        | fan_manual_on.to.itself()
-        | light_on.to.itself()
-        | light_on_fan_on.to.itself()
-        | light_on_fan_off.to.itself()
-        | fan_on_high_humidity.to.itself()
-        | fan_on_timeout.to.itself()
+        | off.to.itself(internal=True)
+        | fan_manual_on.to.itself(internal=True)
+        | light_on.to.itself(internal=True)
+        | light_on_fan_on.to.itself(internal=True)
+        | light_on_fan_off.to.itself(internal=True)
+        | fan_on_high_humidity.to.itself(internal=True)
+        | fan_on_timeout.to.itself(internal=True)
     )
 
     humidity_update = (
@@ -114,13 +114,13 @@ class FanStateMachine(StateMachine):
             cond=["is_high_humidity"],
             unless=["is_auto_on_disabled"],
         )
-        | off.to.itself()
-        | fan_manual_on.to.itself()
-        | light_on.to.itself()
-        | light_on_fan_on.to.itself()
-        | light_on_fan_off.to.itself()
-        | fan_on_high_humidity.to.itself()
-        | fan_on_timeout.to.itself()
+        | off.to.itself(internal=True)
+        | fan_manual_on.to.itself(internal=True)
+        | light_on.to.itself(internal=True)
+        | light_on_fan_on.to.itself(internal=True)
+        | light_on_fan_off.to.itself(internal=True)
+        | fan_on_high_humidity.to.itself(internal=True)
+        | fan_on_timeout.to.itself(internal=True)
     )
 
     timer_update = (
@@ -128,11 +128,9 @@ class FanStateMachine(StateMachine):
         | fan_on_high_humidity.to(off)
         | fan_on_timeout.to(off)
         | off.to.itself(internal=True)
-        | light_on.to.itself()
-        | light_on_fan_on.to.itself()
-        | light_on_fan_off.to.itself()
-        | fan_on_high_humidity.to.itself()
-        | fan_on_timeout.to.itself()
+        | light_on.to.itself(internal=True)
+        | light_on_fan_on.to.itself(internal=True)
+        | light_on_fan_off.to.itself(internal=True)
     )
 
     def on_enter_state(self, source, target, event) -> None:
