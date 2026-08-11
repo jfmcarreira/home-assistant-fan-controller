@@ -29,3 +29,19 @@ Options are available from the integration's **Configure** action:
 - **Maximum Fan Timeout**: cap for a manually enabled fan.
 - **Humidity Threshold**: percentage increase above the baseline that starts the fan.
 
+## Development
+
+Create a virtual environment and install the test dependencies:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements_test.txt
+```
+
+Run the test suite and lint checks:
+
+```bash
+source .venv/bin/activate
+pytest -q
+ruff check custom_components tests
+```
