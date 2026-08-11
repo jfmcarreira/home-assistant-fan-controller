@@ -192,7 +192,7 @@ class FanConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
-    def async_get_options_flow(config_entry: ConfigEntry) -> "FanOptionsFlow":
+    def async_get_options_flow(config_entry: ConfigEntry) -> FanOptionsFlow:
         """Return the options flow handler."""
         return FanOptionsFlow(config_entry)
 

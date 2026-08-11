@@ -1,17 +1,16 @@
 """Coordinator for the Fan Controller integration."""
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 from typing import Any, Protocol
 
-from statemachine import StateMachine, State
-from datetime import datetime, timedelta
-
-from homeassistant.core import HomeAssistant, HassJob, callback
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.event import async_track_state_change_event, async_call_later
-from homeassistant.helpers import entity_registry as er
-from homeassistant.exceptions import ConfigEntryError
 import homeassistant.util.dt as dt_util
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HassJob, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_call_later, async_track_state_change_event
+from statemachine import State, StateMachine
 
 from .const import (
     CONF_AVG_HUMIDITY_SENSOR,
@@ -25,7 +24,6 @@ from .const import (
     DEFAULT_FAN_TIMEOUT,
     DEFAULT_HUMIDITY_THRESHOLD,
     DEFAULT_MAX_TIMEOUT,
-    DOMAIN,
     MAX_HUMIDITY_RISE,
 )
 
