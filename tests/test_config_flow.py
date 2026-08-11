@@ -11,6 +11,7 @@ from custom_components.fan_controller.config_flow import FanOptionsFlow
 from custom_components.fan_controller.const import (
     CONF_FAN_ENTITY,
     CONF_FAN_TIMEOUT,
+    CONF_HUMIDITY_PROGRESS_REQUIRED_DROP,
     CONF_HUMIDITY_THRESHOLD,
     CONF_MAX_TIMEOUT,
     CONF_NAME,
@@ -72,6 +73,7 @@ async def test_options_flow_saves_values(config_entry) -> None:
         CONF_FAN_TIMEOUT: 600,
         CONF_MAX_TIMEOUT: 30,
         CONF_HUMIDITY_THRESHOLD: 25,
+        CONF_HUMIDITY_PROGRESS_REQUIRED_DROP: 3,
     }
 
     result = await FanOptionsFlow(config_entry).async_step_init(options)

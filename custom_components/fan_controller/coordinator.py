@@ -16,13 +16,16 @@ from .const import (
     CONF_DEHUMIDIFIER_SWITCH,
     CONF_FAN_ENTITY,
     CONF_FAN_TIMEOUT,
+    CONF_HUMIDITY_PROGRESS_REQUIRED_DROP,
     CONF_HUMIDITY_SENSOR,
     CONF_HUMIDITY_THRESHOLD,
     CONF_LIGHT_ENTITY,
     CONF_MAX_TIMEOUT,
     DEFAULT_FAN_TIMEOUT,
+    DEFAULT_HUMIDITY_PROGRESS_REQUIRED_DROP,
     DEFAULT_HUMIDITY_THRESHOLD,
     DEFAULT_MAX_TIMEOUT,
+    HUMIDITY_PROGRESS_WINDOW_SECONDS,
     MAX_HUMIDITY_RISE,
 )
 
@@ -41,7 +44,10 @@ class FanController(Protocol):
     def cancel_timer(self) -> None: ...
     def get_fan_timeout_seconds(self) -> float: ...
     def get_max_timeout_seconds(self) -> float: ...
+    def get_humidity_progress_required_drop(self) -> float: ...
     def log_humidity_recovered(self) -> None: ...
+    def start_humidity_progress_check(self) -> None: ...
+    def clear_humidity_progress_check(self) -> None: ...
     def record_humidity_light_on(self) -> None: ...
     def record_humidity_fan_on(self) -> None: ...
 
@@ -167,7 +173,11 @@ class FanStateMachine(StateMachine):
         self.model.set_timer(self.model.get_fan_timeout_seconds())
 
     def on_enter_fan_on_high_humidity(self) -> None:
+        self.model.start_humidity_progress_check()
         self.model.turn_on_fan("humidity rose again during the post-run timeout")
+
+    def on_exit_fan_on_high_humidity(self) -> None:
+        self.model.clear_humidity_progress_check()
 
 
 class FanCoordinator:
@@ -186,6 +196,8 @@ class FanCoordinator:
         self._humidity_light_on: float | None = None
         self._humidity_fan_on: float | None = None
         self._current_humidity: float | None = None
+        self._humidity_delta_started_at: datetime | None = None
+        self._humidity_delta_start_humidity: float | None = None
         self._timer_unsub = None
         self._timer_expires_at: datetime | None = None
 
@@ -372,11 +384,23 @@ class FanCoordinator:
         )
 
     def is_humidity_recovered(self) -> bool:
-        return (
-            self._current_humidity is not None
-            and self.humidity_reference is not None
-            and self._current_humidity <= self.humidity_reference
-        )
+        if self._current_humidity is None or self.humidity_reference is None:
+            return False
+        if self._current_humidity <= self.humidity_reference:
+            return True
+
+        if self._humidity_delta_started_at is None or self._humidity_delta_start_humidity is None:
+            self.start_humidity_delta_check()
+            return False
+
+        if dt_util.utcnow() - self._humidity_delta_started_at < timedelta(seconds=HUMIDITY_PROGRESS_WINDOW_SECONDS):
+            return False
+
+        if self._current_humidity <= self._humidity_delta_start_humidity - self.get_humidity_required_delta():
+            self.start_humidity_delta_check()
+            return False
+
+        return True
 
     def is_auto_on_disabled(self) -> bool:
         return not self._auto_mode
@@ -411,7 +435,16 @@ class FanCoordinator:
         )
 
     def log_humidity_recovered(self) -> None:
-        self._log_fan_decision("Humidity recovered; post-run timeout started.")
+        humidity_recovered = (
+            self._current_humidity is not None
+            and self.humidity_reference is not None
+            and self._current_humidity <= self.humidity_reference
+        )
+        self._log_fan_decision(
+            "Humidity recovered; post-run timeout started."
+            if humidity_recovered
+            else "Humidity did not fall enough; post-run timeout started."
+        )
 
     def _log_fan_decision(self, message: str) -> None:
         """Write a controller decision to Home Assistant's Activity log."""
@@ -479,6 +512,24 @@ class FanCoordinator:
 
     def get_humidity_threshold_ratio(self) -> float:
         return float(self.entry.options.get(CONF_HUMIDITY_THRESHOLD, DEFAULT_HUMIDITY_THRESHOLD))
+
+    def get_humidity_required_delta(self) -> float:
+        return float(
+            self.entry.options.get(
+                CONF_HUMIDITY_PROGRESS_REQUIRED_DROP,
+                DEFAULT_HUMIDITY_PROGRESS_REQUIRED_DROP,
+            )
+        )
+
+    def start_humidity_delta_check(self) -> None:
+        """Start a 10-minute window in which humidity must fall enough to continue."""
+        self._humidity_delta_started_at = dt_util.utcnow()
+        self._humidity_delta_start_humidity = self._current_humidity
+
+    def clear_humidity_progress_check(self) -> None:
+        """Clear the high-humidity progress checkpoint after leaving that state."""
+        self._humidity_delta_started_at = None
+        self._humidity_delta_start_humidity = None
 
     def record_humidity_light_on(self) -> None:
         state = self.hass.states.get(self._humidity_sensor)

@@ -14,9 +14,12 @@ CONF_DEHUMIDIFIER_SWITCH: Final = "dehumidifier_switch"
 CONF_FAN_TIMEOUT: Final = "fan_timeout"
 CONF_MAX_TIMEOUT: Final = "max_timeout"
 CONF_HUMIDITY_THRESHOLD: Final = "humidity_threshold"
+CONF_HUMIDITY_PROGRESS_REQUIRED_DROP: Final = "humidity_progress_required_drop"
 
 # Default option values
 DEFAULT_FAN_TIMEOUT: Final = 300  # seconds
 DEFAULT_MAX_TIMEOUT: Final = 20  # minutes
 DEFAULT_HUMIDITY_THRESHOLD: Final = 15  # percent
+DEFAULT_HUMIDITY_PROGRESS_REQUIRED_DROP: Final = 2.0  # percent
+HUMIDITY_PROGRESS_WINDOW_SECONDS: Final = 600
 MAX_HUMIDITY_RISE: Final = 10.0  # percentage points

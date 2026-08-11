@@ -48,12 +48,14 @@
         "data": {
           "fan_timeout": "Fan Timeout",
           "max_timeout": "Maximum Fan Timeout",
-          "humidity_threshold": "Humidity Threshold"
+          "humidity_threshold": "Humidity Threshold",
+          "humidity_progress_required_drop": "Required Humidity Drop"
         },
         "data_description": {
           "fan_timeout": "How long the fan runs after the light turns off (seconds).",
           "max_timeout": "Maximum time the fan runs when turned on manually (minutes).",
-          "humidity_threshold": "Humidity percentage above baseline to trigger fan (percent)."
+          "humidity_threshold": "Humidity percentage above baseline to trigger fan (percent).",
+          "humidity_progress_required_drop": "Minimum humidity reduction required within 10 minutes (percentage points)."
         }
       }
     }

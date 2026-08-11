@@ -51,6 +51,12 @@ class Controller:
     def log_humidity_recovered(self) -> None:
         self.calls.append(("log_humidity_recovered", None))
 
+    def start_humidity_progress_check(self) -> None:
+        self.calls.append(("start_humidity_progress_check", None))
+
+    def clear_humidity_progress_check(self) -> None:
+        self.calls.append(("clear_humidity_progress_check", None))
+
     def record_humidity_light_on(self) -> None:
         self.calls.append(("record_humidity_light_on", None))
 
@@ -85,3 +91,21 @@ async def test_humidity_update_does_not_restart_post_run_timer() -> None:
     machine.humidity_update()
 
     assert controller.calls == []
+
+
+@pytest.mark.asyncio
+async def test_high_humidity_state_starts_and_clears_progress_check() -> None:
+    """The progress watchdog is active only while humidity is high."""
+    controller = Controller()
+    machine = FanStateMachine(controller)
+    controller.state = "fan_on_timeout"
+    controller.high_humidity = True
+
+    machine.humidity_update()
+    assert ("start_humidity_progress_check", None) in controller.calls
+
+    controller.calls.clear()
+    controller.humidity_recovered = True
+    machine.humidity_update()
+
+    assert ("clear_humidity_progress_check", None) in controller.calls

@@ -22,12 +22,14 @@ from .const import (
     CONF_DEHUMIDIFIER_SWITCH,
     CONF_FAN_ENTITY,
     CONF_FAN_TIMEOUT,
+    CONF_HUMIDITY_PROGRESS_REQUIRED_DROP,
     CONF_HUMIDITY_SENSOR,
     CONF_HUMIDITY_THRESHOLD,
     CONF_LIGHT_ENTITY,
     CONF_MAX_TIMEOUT,
     CONF_NAME,
     DEFAULT_FAN_TIMEOUT,
+    DEFAULT_HUMIDITY_PROGRESS_REQUIRED_DROP,
     DEFAULT_HUMIDITY_THRESHOLD,
     DEFAULT_MAX_TIMEOUT,
     DOMAIN,
@@ -73,6 +75,18 @@ _OPTIONS_SCHEMA = vol.Schema(
                 min=5,
                 max=80,
                 step=1,
+                mode=NumberSelectorMode.BOX,
+                unit_of_measurement="%",
+            )
+        ),
+        vol.Required(
+            CONF_HUMIDITY_PROGRESS_REQUIRED_DROP,
+            default=DEFAULT_HUMIDITY_PROGRESS_REQUIRED_DROP,
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=0.5,
+                max=20,
+                step=0.5,
                 mode=NumberSelectorMode.BOX,
                 unit_of_measurement="%",
             )

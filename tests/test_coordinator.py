@@ -1,9 +1,15 @@
 """Tests for Fan Controller coordination logic."""
 
+from datetime import UTC, datetime, timedelta
+from unittest.mock import patch
+
 import pytest
 from homeassistant.core import HomeAssistant
 
-from custom_components.fan_controller.const import CONF_AVG_HUMIDITY_SENSOR
+from custom_components.fan_controller.const import (
+    CONF_AVG_HUMIDITY_SENSOR,
+    CONF_HUMIDITY_PROGRESS_REQUIRED_DROP,
+)
 from custom_components.fan_controller.coordinator import FanCoordinator
 
 
@@ -49,3 +55,34 @@ def test_humidity_recovery_requires_available_humidity_at_or_below_baseline(
     coordinator._current_humidity = current_humidity
 
     assert coordinator.is_humidity_recovered() is expected_recovered
+
+
+def test_humidity_recovery_requires_configured_drop_every_ten_minutes(hass: HomeAssistant, config_entry) -> None:
+    """High-humidity operation starts post-run when humidity stops improving."""
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(config_entry, options={CONF_HUMIDITY_PROGRESS_REQUIRED_DROP: 2})
+    coordinator = FanCoordinator(hass, config_entry)
+    coordinator._humidity_light_on = 60.0
+    coordinator._current_humidity = 80.0
+    hass.states.async_set(config_entry.data[CONF_AVG_HUMIDITY_SENSOR], "50")
+    started_at = datetime(2026, 8, 11, 18, 0, tzinfo=UTC)
+
+    with patch(
+        "custom_components.fan_controller.coordinator.dt_util.utcnow",
+        return_value=started_at,
+    ):
+        coordinator.start_humidity_delta_check()
+
+    coordinator._current_humidity = 78.0
+    with patch(
+        "custom_components.fan_controller.coordinator.dt_util.utcnow",
+        return_value=started_at + timedelta(minutes=10),
+    ):
+        assert not coordinator.is_humidity_recovered()
+
+    coordinator._current_humidity = 77.0
+    with patch(
+        "custom_components.fan_controller.coordinator.dt_util.utcnow",
+        return_value=started_at + timedelta(minutes=20),
+    ):
+        assert coordinator.is_humidity_recovered()
