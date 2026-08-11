@@ -4,13 +4,13 @@
   "codeowners": [
     "@jfmcarreira"
   ],
-  "documentation": "https://github.com/jfmcarreira/home-assistant-fan-controller",
-  "issue_tracker": "https://github.com/jfmcarreira/home-assistant-fan-controller/issues",
   "config_flow": true,
+  "documentation": "https://github.com/jfmcarreira/home-assistant-fan-controller",
   "integration_type": "device",
   "iot_class": "calculated",
+  "issue_tracker": "https://github.com/jfmcarreira/home-assistant-fan-controller/issues",
   "requirements": [
     "python-statemachine==2.3.6"
   ],
-  "version": "1.2.1"
+  "version": "1.3.0"
 }
