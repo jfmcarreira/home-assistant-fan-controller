@@ -109,3 +109,27 @@ async def test_high_humidity_state_starts_and_clears_progress_check() -> None:
     machine.humidity_update()
 
     assert ("clear_humidity_delta_check", None) in controller.calls
+
+
+@pytest.mark.asyncio
+async def test_light_on_returns_high_humidity_state_to_active_light_session() -> None:
+    """A new light session must not inherit the prior humidity timeout."""
+    controller = Controller()
+    controller.fan_on = True
+    controller.light_on = True
+    controller.state = "fan_on_high_humidity"
+    machine = FanStateMachine(controller)
+
+    machine.state_update()
+
+    assert machine.current_state.id == "light_on_fan_on"
+    assert ("clear_humidity_delta_check", None) in controller.calls
+    assert ("record_humidity_light_on", None) in controller.calls
+
+    controller.calls.clear()
+    controller.humidity_recovered = True
+    machine.humidity_update()
+    machine.timer_update()
+
+    assert machine.current_state.id == "light_on_fan_on"
+    assert ("turn_off_fan", "humidity recovery timeout elapsed") not in controller.calls

@@ -85,6 +85,7 @@ class FanStateMachine(StateMachine):
             cond=["is_high_humidity"],
             unless=["is_light_on", "is_auto_on_disabled"],
         )
+        | fan_on_high_humidity.to(light_on_fan_on, cond=["is_fan_on", "is_light_on"])
         | fan_on_timeout.to(light_on_fan_on, cond=["is_light_on"])
         | off.from_(light_on, unless=["is_light_on", "is_fan_on"])
         | off.from_(fan_manual_on, unless=["is_fan_on"])
@@ -153,6 +154,10 @@ class FanStateMachine(StateMachine):
 
     def on_enter_light_on(self, source) -> None:
         if source is None or source.id == "off":
+            self.model.record_humidity_light_on()
+
+    def on_enter_light_on_fan_on(self, source) -> None:
+        if source.id == "fan_on_high_humidity":
             self.model.record_humidity_light_on()
 
     def on_enter_fan_manual_on(self) -> None:
