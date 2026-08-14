@@ -51,11 +51,11 @@ class Controller:
     def log_humidity_recovered(self) -> None:
         self.calls.append(("log_humidity_recovered", None))
 
-    def start_humidity_progress_check(self) -> None:
-        self.calls.append(("start_humidity_progress_check", None))
+    def start_humidity_delta_check(self) -> None:
+        self.calls.append(("start_humidity_delta_check", None))
 
-    def clear_humidity_progress_check(self) -> None:
-        self.calls.append(("clear_humidity_progress_check", None))
+    def clear_humidity_delta_check(self) -> None:
+        self.calls.append(("clear_humidity_delta_check", None))
 
     def record_humidity_light_on(self) -> None:
         self.calls.append(("record_humidity_light_on", None))
@@ -102,10 +102,10 @@ async def test_high_humidity_state_starts_and_clears_progress_check() -> None:
     controller.high_humidity = True
 
     machine.humidity_update()
-    assert ("start_humidity_progress_check", None) in controller.calls
+    assert ("start_humidity_delta_check", None) in controller.calls
 
     controller.calls.clear()
     controller.humidity_recovered = True
     machine.humidity_update()
 
-    assert ("clear_humidity_progress_check", None) in controller.calls
+    assert ("clear_humidity_delta_check", None) in controller.calls

@@ -46,8 +46,8 @@ class FanController(Protocol):
     def get_max_timeout_seconds(self) -> float: ...
     def get_humidity_progress_required_drop(self) -> float: ...
     def log_humidity_recovered(self) -> None: ...
-    def start_humidity_progress_check(self) -> None: ...
-    def clear_humidity_progress_check(self) -> None: ...
+    def start_humidity_delta_check(self) -> None: ...
+    def clear_humidity_delta_check(self) -> None: ...
     def record_humidity_light_on(self) -> None: ...
     def record_humidity_fan_on(self) -> None: ...
 
@@ -173,11 +173,11 @@ class FanStateMachine(StateMachine):
         self.model.set_timer(self.model.get_fan_timeout_seconds())
 
     def on_enter_fan_on_high_humidity(self) -> None:
-        self.model.start_humidity_progress_check()
+        self.model.start_humidity_delta_check()
         self.model.turn_on_fan("humidity rose again during the post-run timeout")
 
     def on_exit_fan_on_high_humidity(self) -> None:
-        self.model.clear_humidity_progress_check()
+        self.model.clear_humidity_delta_check()
 
 
 class FanCoordinator:
@@ -526,7 +526,7 @@ class FanCoordinator:
         self._humidity_delta_started_at = dt_util.utcnow()
         self._humidity_delta_start_humidity = self._current_humidity
 
-    def clear_humidity_progress_check(self) -> None:
+    def clear_humidity_delta_check(self) -> None:
         """Clear the high-humidity progress checkpoint after leaving that state."""
         self._humidity_delta_started_at = None
         self._humidity_delta_start_humidity = None
