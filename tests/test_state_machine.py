@@ -81,6 +81,62 @@ async def test_manual_fan_state_update_does_not_restart_runtime_timer() -> None:
 
 
 @pytest.mark.asyncio
+async def test_fan_started_with_light_on_has_no_manual_runtime_limit() -> None:
+    """Fan starts while the light is on use the active light-session behavior."""
+    controller = Controller()
+    machine = FanStateMachine(controller)
+    controller.light_on = True
+    machine.state_update()
+    controller.calls.clear()
+
+    controller.fan_on = True
+    machine.state_update()
+
+    assert machine.current_state.id == "light_on_fan_on"
+    assert not any(call[0] == "set_timer" for call in controller.calls)
+
+
+@pytest.mark.asyncio
+async def test_humidity_started_fan_with_light_on_has_no_manual_runtime_limit() -> None:
+    """Humidity-driven operation is not treated as a manually started fan."""
+    controller = Controller()
+    machine = FanStateMachine(controller)
+    controller.light_on = True
+    machine.state_update()
+    controller.calls.clear()
+
+    controller.high_humidity = True
+    machine.humidity_update()
+
+    assert machine.current_state.id == "light_on_fan_on"
+    assert not any(call[0] == "set_timer" for call in controller.calls)
+
+
+@pytest.mark.asyncio
+async def test_fan_reenabled_during_light_session_has_no_manual_runtime_limit() -> None:
+    """Re-enabling a fan after opting out keeps the active light-session behavior."""
+    controller = Controller()
+    machine = FanStateMachine(controller)
+    controller.light_on = True
+    machine.state_update()
+    controller.high_humidity = True
+    machine.humidity_update()
+    controller.fan_on = True
+    machine.state_update()
+
+    controller.fan_on = False
+    machine.state_update()
+    assert machine.current_state.id == "light_on_fan_off"
+
+    controller.calls.clear()
+    controller.fan_on = True
+    machine.state_update()
+
+    assert machine.current_state.id == "light_on_fan_on"
+    assert not any(call[0] == "set_timer" for call in controller.calls)
+
+
+@pytest.mark.asyncio
 async def test_humidity_update_does_not_restart_post_run_timer() -> None:
     """Humidity changes below the threshold must not extend the post-run timer."""
     controller = Controller()

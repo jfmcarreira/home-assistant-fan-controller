@@ -8,7 +8,10 @@ from homeassistant.core import HomeAssistant
 
 from custom_components.fan_controller.const import (
     CONF_AVG_HUMIDITY_SENSOR,
+    CONF_FAN_ENTITY,
     CONF_HUMIDITY_PROGRESS_REQUIRED_DROP,
+    CONF_LIGHT_ENTITY,
+    HUMIDITY_PROGRESS_WINDOW_SECONDS,
 )
 from custom_components.fan_controller.coordinator import FanCoordinator
 
@@ -86,3 +89,44 @@ def test_humidity_recovery_requires_configured_drop_every_ten_minutes(hass: Home
         return_value=started_at + timedelta(minutes=20),
     ):
         assert coordinator.is_humidity_recovered()
+
+    coordinator.clear_humidity_delta_check()
+
+
+def test_humidity_delta_check_schedules_and_cancels_deadline(hass: HomeAssistant, config_entry) -> None:
+    """Each progress window schedules a check and clearing it cancels the callback."""
+    coordinator = FanCoordinator(hass, config_entry)
+
+    with patch("custom_components.fan_controller.coordinator.async_call_later") as schedule:
+        coordinator.start_humidity_delta_check()
+
+        assert schedule.call_args.args[1] == HUMIDITY_PROGRESS_WINDOW_SECONDS
+
+        coordinator.clear_humidity_delta_check()
+
+    schedule.return_value.assert_called_once()
+
+
+async def test_humidity_delta_timeout_detects_stalled_humidity_without_sensor_event(
+    hass: HomeAssistant, config_entry
+) -> None:
+    """The progress timer starts post-run mode even when no sensor state changes arrive."""
+    coordinator = FanCoordinator(hass, config_entry)
+    started_at = datetime(2026, 8, 11, 18, 0, tzinfo=UTC)
+    coordinator._humidity_light_on = 60.0
+    coordinator._current_humidity = 80.0
+    coordinator._humidity_delta_started_at = started_at
+    coordinator._humidity_delta_start_humidity = 80.0
+    coordinator.state = "fan_on_high_humidity"
+    hass.states.async_set(config_entry.data[CONF_FAN_ENTITY], "on")
+    hass.states.async_set(config_entry.data[CONF_LIGHT_ENTITY], "off")
+    hass.states.async_set(config_entry.data[CONF_AVG_HUMIDITY_SENSOR], "50")
+
+    with patch(
+        "custom_components.fan_controller.coordinator.dt_util.utcnow",
+        return_value=started_at + timedelta(minutes=10),
+    ):
+        await coordinator._async_handle_humidity_delta_timeout()
+
+    assert coordinator.current_state_name == "fan_on_timeout"
+    coordinator.cancel_timer()

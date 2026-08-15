@@ -44,7 +44,7 @@ class FanController(Protocol):
     def cancel_timer(self) -> None: ...
     def get_fan_timeout_seconds(self) -> float: ...
     def get_max_timeout_seconds(self) -> float: ...
-    def get_humidity_progress_required_drop(self) -> float: ...
+    def get_humidity_required_delta(self) -> float: ...
     def log_humidity_recovered(self) -> None: ...
     def start_humidity_delta_check(self) -> None: ...
     def clear_humidity_delta_check(self) -> None: ...
@@ -203,6 +203,7 @@ class FanCoordinator:
         self._current_humidity: float | None = None
         self._humidity_delta_started_at: datetime | None = None
         self._humidity_delta_start_humidity: float | None = None
+        self._humidity_delta_timer_unsub = None
         self._timer_unsub = None
         self._timer_expires_at: datetime | None = None
 
@@ -229,7 +230,7 @@ class FanCoordinator:
                 self._handle_humidity_state_change,
             )
         )
-        self.entry.async_on_unload(self.cancel_timer)
+        self.entry.async_on_unload(self._cancel_timers)
 
         if self._control_entities_available():
             self.machine.state_update()
@@ -324,7 +325,7 @@ class FanCoordinator:
 
         self._auto_mode = value
         if not value:
-            self.cancel_timer()
+            self._cancel_timers()
             self.turn_off_fan("Auto Mode was disabled")
         else:
             await self._async_trigger_state_update()
@@ -503,11 +504,22 @@ class FanCoordinator:
         self.machine.timer_update()
         self._notify_state_change()
 
+    async def _async_handle_humidity_delta_timeout(self) -> None:
+        """Evaluate humidity progress when its deadline arrives without a sensor update."""
+        if self.current_state_name != "fan_on_high_humidity" or not self._auto_mode:
+            return
+        await self._async_trigger_humidity_update()
+
     def cancel_timer(self) -> None:
         if self._timer_unsub is not None:
             self._timer_unsub()
             self._timer_unsub = None
         self._timer_expires_at = None
+
+    def _cancel_timers(self) -> None:
+        """Cancel all timers owned by this coordinator."""
+        self.cancel_timer()
+        self.clear_humidity_delta_check()
 
     def get_fan_timeout_seconds(self) -> float:
         return float(self.entry.options.get(CONF_FAN_TIMEOUT, DEFAULT_FAN_TIMEOUT))
@@ -528,11 +540,26 @@ class FanCoordinator:
 
     def start_humidity_delta_check(self) -> None:
         """Start a 10-minute window in which humidity must fall enough to continue."""
+        if self._humidity_delta_timer_unsub is not None:
+            self._humidity_delta_timer_unsub()
         self._humidity_delta_started_at = dt_util.utcnow()
         self._humidity_delta_start_humidity = self._current_humidity
+        self._humidity_delta_timer_unsub = async_call_later(
+            self.hass,
+            HUMIDITY_PROGRESS_WINDOW_SECONDS,
+            HassJob(self._handle_humidity_delta_timeout, cancel_on_shutdown=True),
+        )
+
+    @callback
+    def _handle_humidity_delta_timeout(self, _now) -> None:
+        self._humidity_delta_timer_unsub = None
+        self.hass.async_create_task(self._async_handle_humidity_delta_timeout())
 
     def clear_humidity_delta_check(self) -> None:
         """Clear the high-humidity progress checkpoint after leaving that state."""
+        if self._humidity_delta_timer_unsub is not None:
+            self._humidity_delta_timer_unsub()
+            self._humidity_delta_timer_unsub = None
         self._humidity_delta_started_at = None
         self._humidity_delta_start_humidity = None
 
